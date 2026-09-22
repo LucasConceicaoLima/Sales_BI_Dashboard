@@ -1,0 +1,31 @@
+# =========================
+# Generated analytical layer
+# =========================
+data/processed/*.csv
+!data/processed/.gitkeep
+
+# =========================
+# Power BI local/cache artifacts
+# =========================
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# =========================
+# IDE
+# =========================
+.idea/
+
+# =========================
+# Local configuration
+# =========================
+.env
+.env.*
+!.env.example
