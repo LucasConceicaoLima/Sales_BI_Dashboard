@@ -194,16 +194,20 @@ O projeto utiliza um **modelo dimensional em estrela (Star Schema)**.
 A estrutura principal é:
 
 ```text
-          DimDate
-             │
-             │
-DimCustomer ──── FactSales ──── DimSeller
-             │
-             │
-         DimProduct
-             │
-             │
-         DimRegion
+                         ┌──────────────┐
+                         │   DimDate    │
+                         └──────┬───────┘
+                                │
+                                │
+┌──────────────┐         ┌─────▼──────┐         ┌──────────────┐
+│ DimCustomer  │────────▶│  FactSales │◀────────│  DimSeller   │
+└──────────────┘         └─────┬──────┘         └──────────────┘
+                                │
+                         ┌──────┴──────┐
+                         │             │
+                  ┌─────▼─────┐ ┌────▼──────┐
+                  │ DimProduct│ │ DimRegion │
+                  └───────────┘ └───────────┘
 ```
 
 As dimensões se relacionam diretamente com a tabela fato, mantendo o modelo adequado para análises no Power BI.
