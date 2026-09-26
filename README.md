@@ -149,13 +149,12 @@ Após a execução, são gerados os seguintes arquivos:
 ```text
 data/processed/
 
-├── vendas_tratadas.csv
-├── fact_sales.csv
-├── dim_customer.csv
-├── dim_product.csv
-├── dim_seller.csv
-├── dim_region.csv
-└── dim_date.csv
+├── fato_vendas.csv
+├── dim_cliente.csv
+├── dim_produto.csv
+├── dim_vendedor.csv
+├── dim_regiao.csv
+└── dim_data.csv
 ```
 
 ## Responsabilidades do ETL
@@ -190,25 +189,6 @@ O objetivo é que nenhuma tabela dimensional ou fato precise ser mantida manualm
 O projeto utiliza um **modelo dimensional em estrela (Star Schema)**.
 
 ![Modelo dimensional](docs/modelagem.png)
-
-A estrutura principal é:
-
-```text
-                         ┌──────────────┐
-                         │   dim_data    │
-                         └──────┬───────┘
-                                │
-                                │
-┌──────────────┐         ┌─────▼──────┐         ┌──────────────┐
-│ dim_cliente  │────────▶│  fato_vendas │◀────────│  dim_vendedor   │
-└──────────────┘         └─────┬──────┘         └──────────────┘
-                                │
-                         ┌──────┴──────┐
-                         │             │
-                  ┌─────▼─────┐ ┌────▼──────┐
-                  │ dim_produto│ │ dim_regiao │
-                  └───────────┘ └───────────┘
-```
 
 As dimensões se relacionam diretamente com a tabela fato, mantendo o modelo adequado para análises no Power BI.
 
