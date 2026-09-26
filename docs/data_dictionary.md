@@ -1,74 +1,79 @@
-# Data Dictionary
+# Dicionário de Dados
 
-## Raw source — `vendas.csv`
+## Fonte de dados — `vendas.csv`
 
-This is the only source dataset in the repository.
+Este é o único conjunto de dados de origem do repositório.
 
-| Column | Description |
+| Coluna | Descrição |
 |---|---|
-| sale_id | Transaction identifier |
-| sale_date | Transaction date |
-| customer_id | Customer identifier |
-| customer_name | Customer display name |
-| customer_segment | Customer business segment |
-| city | Customer city |
-| state | Brazilian state code |
-| region | Brazilian macro-region |
-| region_id | Geography business key |
-| product_id | Product identifier |
-| product_name | Product name |
-| category | Product category |
-| subcategory | Product subcategory |
-| unit_price | Selling price per unit |
-| quantity | Transaction quantity |
-| discount_pct | Discount rate |
-| unit_cost | Cost per unit |
-| seller_id | Seller identifier |
-| seller_name | Seller name |
-| seller_team | Commercial team |
-| channel | Sales channel |
-| order_status | Transaction status |
+| sale_id | Identificador da transação |
+| sale_date | Data da transação |
+| customer_id | Identificador do cliente |
+| customer_name | Nome do cliente |
+| customer_segment | Segmento do cliente |
+| city | Cidade do cliente |
+| state | Sigla do estado brasileiro |
+| region | Macrorregião brasileira |
+| region_id | Chave de identificação da região |
+| product_id | Identificador do produto |
+| product_name | Nome do produto |
+| category | Categoria do produto |
+| subcategory | Subcategoria do produto |
+| unit_price | Preço de venda por unidade |
+| quantity | Quantidade da transação |
+| discount_pct | Percentual de desconto |
+| unit_cost | Custo por unidade |
+| seller_id | Identificador do vendedor |
+| seller_name | Nome do vendedor |
+| seller_team | Equipe comercial |
+| channel | Canal de venda |
+| order_status | Status da transação |
 
-## Generated — FactSales
+## Gerada — fato_vendas
 
-Grain: one row per valid transaction after ETL.
+**Grão:** uma linha por transação válida após o processo de ETL.
 
-| Column | Description |
+| Coluna | Descrição |
 |---|---|
-| sale_id | Transaction key |
-| date_id | Date dimension key |
-| customer_id | Customer dimension key |
-| product_id | Product dimension key |
-| seller_id | Seller dimension key |
-| region_id | Region dimension key |
-| channel | Sales channel |
-| order_status | Concluído or Devolvido |
-| unit_price | Unit selling price |
-| quantity | Original transaction quantity |
-| net_quantity | Signed quantity after returns |
-| discount_pct | Discount rate |
-| gross_revenue | Revenue before discount |
-| discount_amount | Discount value |
-| net_revenue | Revenue after discount |
-| unit_cost | Unit cost |
-| total_cost | Signed transaction cost |
-| gross_profit | Net revenue less total cost |
-| margin_pct | Transaction gross-margin percentage |
+| sale_id | Chave da transação |
+| date_id | Chave da dimensão de data |
+| customer_id | Chave da dimensão de cliente |
+| product_id | Chave da dimensão de produto |
+| seller_id | Chave da dimensão de vendedor |
+| region_id | Chave da dimensão de região |
+| channel | Canal de venda |
+| order_status | Status da transação: Concluído ou Devolvido |
+| unit_price | Preço de venda por unidade |
+| quantity | Quantidade original da transação |
+| net_quantity | Quantidade líquida considerando devoluções |
+| discount_pct | Percentual de desconto |
+| gross_revenue | Receita antes dos descontos |
+| discount_amount | Valor do desconto |
+| net_revenue | Receita após os descontos |
+| unit_cost | Custo por unidade |
+| total_cost | Custo total da transação considerando devoluções |
+| gross_profit | Receita líquida menos o custo total |
+| margin_pct | Percentual de margem bruta da transação |
 
-## Generated dimensions
+## Dimensões geradas
 
-### DimCustomer
-`customer_id`, `customer_name`, `segment`, `city`, `state`, `region_id`
+### dim_cliente
 
-### DimProduct
+`customer_id`, `customer_name`, `segment`, `city`, `state`
+
+### dim_produto
+
 `product_id`, `product_name`, `category`, `subcategory`
 
-### DimSeller
-`seller_id`, `seller_name`, `team`
+### dim_vendedor
 
-### DimRegion
+`seller_id`, `seller_name`, `seller_team`
+
+### dim_regiao
+
 `region_id`, `region`, `state`
 
-### DimDate
+### dim_data
+
 `date_id`, `date`, `year`, `quarter`, `month_number`, `month_name`,
 `year_month`, `day`, `weekday_number`, `weekday_name`, `is_weekend`

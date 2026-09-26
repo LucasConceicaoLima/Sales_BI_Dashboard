@@ -4,12 +4,12 @@ import numpy as np
 import pandas as pd
 
 
-ROOT = Path(__file__).resolve().parents[1]
-RAW_FILE = ROOT / "data" / "raw" / "vendas.csv"
-OUT_DIR = ROOT / "data" / "processed"
+RAIZ = Path(__file__).resolve().parents[1]
+ARQUIVO_BRUTO = RAIZ / "data" / "raw" / "vendas.csv"
+DIRETORIO_SAIDA = RAIZ / "data" / "processed"
 
 
-EXPECTED_COLUMNS = [
+COLUNAS_ESPERADAS = [
     "sale_id",
     "sale_date",
     "customer_id",
@@ -35,56 +35,56 @@ EXPECTED_COLUMNS = [
 ]
 
 
-def _mode(series: pd.Series, fallback="Unknown"):
+def _moda(series: pd.Series, valor_padrao="Unknown"):
     """
-    Returns the most frequent non-null/non-empty value.
+    Retorna o valor não nulo/não vazio mais frequente.
     """
-    values = series.dropna().astype(str).str.strip()
-    values = values[values != ""]
+    valores = series.dropna().astype(str).str.strip()
+    valores = valores[valores != ""]
 
-    if values.empty:
-        return fallback
+    if valores.empty:
+        return valor_padrao
 
-    return values.mode().iloc[0]
+    return valores.mode().iloc[0]
 
 
-def validate_raw(df: pd.DataFrame):
+def validar_dados_brutos(df: pd.DataFrame):
     """
-    Validates the raw dataset structure and required keys.
+    Valida a estrutura do conjunto de dados bruto e as chaves obrigatórias.
     """
-    missing_columns = [
-        column for column in EXPECTED_COLUMNS
+    colunas_ausentes = [
+        column for column in COLUNAS_ESPERADAS
         if column not in df.columns
     ]
 
-    if missing_columns:
+    if colunas_ausentes:
         raise ValueError(
-            f"Missing required columns: {missing_columns}"
+            f"Missing required colunas: {colunas_ausentes}"
         )
 
-    required_keys = [
+    chaves_obrigatorias = [
         "sale_id",
         "customer_id",
         "product_id",
         "seller_id",
     ]
 
-    for column in required_keys:
+    for column in chaves_obrigatorias:
         if df[column].isna().any():
             raise ValueError(
-                f"Column '{column}' contains null values."
+                f"Column '{column}' contains null valores."
             )
 
 
-def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
+def limpar_dados_brutos(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Cleans and enriches the raw transactional dataset.
+    Limpa e enriquece o conjunto de dados transacional bruto.
     """
 
     df = df.copy()
 
     # ---------------------------------------------------------
-    # Remove duplicated transactions
+    # Remover transações duplicadas
     # ---------------------------------------------------------
 
     df = df.drop_duplicates(
@@ -93,7 +93,7 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
     ).copy()
 
     # ---------------------------------------------------------
-    # Dates
+    # Datas
     # ---------------------------------------------------------
 
     df["sale_date"] = pd.to_datetime(
@@ -103,14 +103,14 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
 
     if df["sale_date"].isna().any():
         raise ValueError(
-            "Some sale_date values could not be converted to dates."
+            "Some sale_date valores could not be converted to datas."
         )
 
     # ---------------------------------------------------------
-    # Integer columns
+    # Integer colunas
     # ---------------------------------------------------------
 
-    integer_columns = [
+    colunas_inteiras = [
         "customer_id",
         "region_id",
         "product_id",
@@ -118,33 +118,33 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
         "seller_id",
     ]
 
-    for column in integer_columns:
+    for column in colunas_inteiras:
         df[column] = pd.to_numeric(
             df[column],
             errors="raise"
         ).astype("int64")
 
     # ---------------------------------------------------------
-    # Numeric columns
+    # Numeric colunas
     # ---------------------------------------------------------
 
-    numeric_columns = [
+    colunas_numericas = [
         "unit_price",
         "discount_pct",
         "unit_cost",
     ]
 
-    for column in numeric_columns:
+    for column in colunas_numericas:
         df[column] = pd.to_numeric(
             df[column],
             errors="raise"
         )
 
     # ---------------------------------------------------------
-    # Text normalization
+    # Normalização de texto
     # ---------------------------------------------------------
 
-    text_columns = [
+    colunas_texto = [
         "customer_name",
         "customer_segment",
         "city",
@@ -159,21 +159,21 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
         "order_status",
     ]
 
-    for column in text_columns:
+    for column in colunas_texto:
         df[column] = (
             df[column]
             .astype("string")
             .str.strip()
         )
 
-    # State normalization
+    # Normalização de estado
     df["state"] = df["state"].str.upper()
 
-    # Region normalization
+    # Normalização de região
     df["region"] = df["region"].str.title()
 
     # ---------------------------------------------------------
-    # Customer segment
+    # Segmento de cliente
     # ---------------------------------------------------------
 
     df["customer_segment"] = (
@@ -181,14 +181,14 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
         .replace("", pd.NA)
     )
 
-    # Missing segments become Unknown
+    # Segmentos ausentes recebem o valor Unknown
     df["customer_segment"] = (
         df["customer_segment"]
         .fillna("Unknown")
     )
 
     # ---------------------------------------------------------
-    # Remove cancelled transactions
+    # Remover transações canceladas
     # ---------------------------------------------------------
 
     df = df[
@@ -196,10 +196,10 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
     ].copy()
 
     # ---------------------------------------------------------
-    # Returns
+    # Devoluções
     # ---------------------------------------------------------
-    # Normal sale = +1
-    # Return     = -1
+    # Venda normal = +1
+    # Devolução    = -1
     # ---------------------------------------------------------
 
     df["movement_sign"] = np.where(
@@ -209,7 +209,7 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # ---------------------------------------------------------
-    # Quantities
+    # Quantidades
     # ---------------------------------------------------------
 
     df["net_quantity"] = (
@@ -217,7 +217,7 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # ---------------------------------------------------------
-    # Revenue
+    # Receita
     # ---------------------------------------------------------
 
     df["gross_revenue"] = (
@@ -227,7 +227,7 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # ---------------------------------------------------------
-    # Discount
+    # Desconto
     # ---------------------------------------------------------
 
     df["discount_amount"] = (
@@ -238,7 +238,7 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # ---------------------------------------------------------
-    # Net revenue
+    # Receita líquida
     # ---------------------------------------------------------
 
     df["net_revenue"] = (
@@ -247,7 +247,7 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # ---------------------------------------------------------
-    # Cost
+    # Custo
     # ---------------------------------------------------------
 
     df["total_cost"] = (
@@ -257,7 +257,7 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # ---------------------------------------------------------
-    # Gross profit
+    # Lucro bruto
     # ---------------------------------------------------------
 
     df["gross_profit"] = (
@@ -266,7 +266,7 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # ---------------------------------------------------------
-    # Margin
+    # Margem
     # ---------------------------------------------------------
 
     df["margin_pct"] = np.where(
@@ -276,7 +276,7 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # ---------------------------------------------------------
-    # Date ID
+    # ID da data
     # ---------------------------------------------------------
 
     df["date_id"] = (
@@ -288,142 +288,142 @@ def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def build_dim_customer(df: pd.DataFrame) -> pd.DataFrame:
+def construir_dim_cliente(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Builds the customer dimension.
+    Builds the customer dimensao.
 
-    Region is intentionally NOT included here.
-    Customer attributes remain independent from the
+    A região intencionalmente NÃO é incluída aqui.
+    Os atributos do cliente permanecem independentes da
     transactional region used by FactSales.
     """
 
-    dim_customer = (
+    dim_cliente = (
         df.groupby("customer_id", as_index=False)
         .agg(
-            customer_name=("customer_name", _mode),
-            segment=("customer_segment", _mode),
-            city=("city", _mode),
-            state=("state", _mode),
+            customer_name=("customer_name", _moda),
+            segment=("customer_segment", _moda),
+            city=("city", _moda),
+            state=("state", _moda),
         )
     )
 
-    return dim_customer
+    return dim_cliente
 
 
-def build_dim_product(df: pd.DataFrame) -> pd.DataFrame:
+def construir_dim_produto(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Builds the product dimension.
+    Builds the product dimensao.
     """
 
-    dim_product = (
+    dim_produto = (
         df.groupby("product_id", as_index=False)
         .agg(
-            product_name=("product_name", _mode),
-            category=("category", _mode),
-            subcategory=("subcategory", _mode),
+            product_name=("product_name", _moda),
+            category=("category", _moda),
+            subcategory=("subcategory", _moda),
         )
     )
 
-    return dim_product
+    return dim_produto
 
 
-def build_dim_seller(df: pd.DataFrame) -> pd.DataFrame:
+def construir_dim_vendedor(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Builds the seller dimension.
+    Builds the seller dimensao.
     """
 
-    dim_seller = (
+    dim_vendedor = (
         df.groupby("seller_id", as_index=False)
         .agg(
-            seller_name=("seller_name", _mode),
-            seller_team=("seller_team", _mode),
+            seller_name=("seller_name", _moda),
+            seller_team=("seller_team", _moda),
         )
     )
 
-    return dim_seller
+    return dim_vendedor
 
 
-def build_dim_region(df: pd.DataFrame) -> pd.DataFrame:
+def construir_dim_regiao(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Builds the region dimension.
+    Builds the region dimensao.
     """
 
-    dim_region = (
+    dim_regiao = (
         df.groupby("region_id", as_index=False)
         .agg(
-            region=("region", _mode),
-            state=("state", _mode),
+            region=("region", _moda),
+            state=("state", _moda),
         )
     )
 
-    return dim_region
+    return dim_regiao
 
 
-def build_dim_date(df: pd.DataFrame) -> pd.DataFrame:
+def construir_dim_data(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Builds a continuous date dimension covering the
-    complete transaction period.
+    Builds a continuous date dimensao covering the
+    todo o período das transações.
     """
 
-    start_date = df["sale_date"].min().normalize()
-    end_date = df["sale_date"].max().normalize()
+    data_inicial = df["sale_date"].min().normalize()
+    data_final = df["sale_date"].max().normalize()
 
-    dates = pd.date_range(
-        start=start_date,
-        end=end_date,
+    datas = pd.date_range(
+        start=data_inicial,
+        end=data_final,
         freq="D",
     )
 
-    dim_date = pd.DataFrame({
-        "date": dates
+    dim_data = pd.DataFrame({
+        "date": datas
     })
 
-    dim_date["date_id"] = (
-        dim_date["date"]
+    dim_data["date_id"] = (
+        dim_data["date"]
         .dt.strftime("%Y%m%d")
         .astype(int)
     )
 
-    dim_date["year"] = dim_date["date"].dt.year
+    dim_data["year"] = dim_data["date"].dt.year
 
-    dim_date["quarter"] = (
+    dim_data["quarter"] = (
         "Q"
-        + dim_date["date"].dt.quarter.astype(str)
+        + dim_data["date"].dt.quarter.astype(str)
     )
 
-    dim_date["month_number"] = (
-        dim_date["date"].dt.month
+    dim_data["month_number"] = (
+        dim_data["date"].dt.month
     )
 
-    dim_date["month_name"] = (
-        dim_date["date"]
+    dim_data["month_name"] = (
+        dim_data["date"]
         .dt.month_name()
     )
 
-    dim_date["year_month"] = (
-        dim_date["date"]
+    dim_data["year_month"] = (
+        dim_data["date"]
         .dt.strftime("%Y-%m")
     )
 
-    dim_date["day"] = (
-        dim_date["date"].dt.day
+    dim_data["day"] = (
+        dim_data["date"].dt.day
     )
 
-    dim_date["weekday_number"] = (
-        dim_date["date"].dt.weekday + 1
+    dim_data["weekday_number"] = (
+        dim_data["date"].dt.weekday + 1
     )
 
-    dim_date["weekday_name"] = (
-        dim_date["date"]
+    dim_data["weekday_name"] = (
+        dim_data["date"]
         .dt.day_name()
     )
 
-    dim_date["is_weekend"] = (
-        dim_date["date"]
+    dim_data["is_weekend"] = (
+        dim_data["date"]
         .dt.weekday >= 5
     )
 
-    return dim_date[
+    return dim_data[
         [
             "date_id",
             "date",
@@ -440,15 +440,15 @@ def build_dim_date(df: pd.DataFrame) -> pd.DataFrame:
     ]
 
 
-def build_fact_sales(df: pd.DataFrame) -> pd.DataFrame:
+def construir_fato_vendas(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Builds the sales fact table.
+    Constrói a tabela fato de vendas.
 
-    Region remains in the fact table because it represents
-    the region associated with the transaction.
+    A região permanece na tabela fato porque representa
+    a região associada à transação.
     """
 
-    columns = [
+    colunas = [
         "sale_id",
         "date_id",
         "customer_id",
@@ -470,278 +470,278 @@ def build_fact_sales(df: pd.DataFrame) -> pd.DataFrame:
         "margin_pct",
     ]
 
-    return df[columns].copy()
+    return df[colunas].copy()
 
 
-def validate_model(
-    fact_sales: pd.DataFrame,
-    dim_customer: pd.DataFrame,
-    dim_product: pd.DataFrame,
-    dim_seller: pd.DataFrame,
-    dim_region: pd.DataFrame,
-    dim_date: pd.DataFrame,
+def validar_modelo(
+    fato_vendas: pd.DataFrame,
+    dim_cliente: pd.DataFrame,
+    dim_produto: pd.DataFrame,
+    dim_vendedor: pd.DataFrame,
+    dim_regiao: pd.DataFrame,
+    dim_data: pd.DataFrame,
 ):
     """
-    Validates referential integrity between the fact
-    table and dimensions.
+    Valida a integridade referencial entre a tabela fato
+    table and dimensoes.
     """
 
     # ---------------------------------------------------------
-    # Validate dimension key uniqueness
+    # Validate dimensao key uniqueness
     # ---------------------------------------------------------
 
-    dimensions = {
-        "customer_id": dim_customer,
-        "product_id": dim_product,
-        "seller_id": dim_seller,
-        "region_id": dim_region,
-        "date_id": dim_date,
+    dimensoes = {
+        "customer_id": dim_cliente,
+        "product_id": dim_produto,
+        "seller_id": dim_vendedor,
+        "region_id": dim_regiao,
+        "date_id": dim_data,
     }
 
-    for key, dimension in dimensions.items():
-        if dimension[key].duplicated().any():
+    for key, dimensao in dimensoes.items():
+        if dimensao[key].duplicated().any():
             raise ValueError(
-                f"Duplicate keys found in dimension '{key}'."
+                f"Duplicate keys found in dimensao '{key}'."
             )
 
     # ---------------------------------------------------------
-    # Validate fact -> customer
+    # Validar fato -> cliente
     # ---------------------------------------------------------
 
-    invalid_customers = (
-        ~fact_sales["customer_id"]
-        .isin(dim_customer["customer_id"])
+    clientes_invalidos = (
+        ~fato_vendas["customer_id"]
+        .isin(dim_cliente["customer_id"])
     )
 
-    if invalid_customers.any():
+    if clientes_invalidos.any():
         raise ValueError(
-            "FactSales contains customer_id values "
+            "FactSales contains customer_id valores "
             "not present in DimCustomer."
         )
 
     # ---------------------------------------------------------
-    # Validate fact -> product
+    # Validar fato -> produto
     # ---------------------------------------------------------
 
-    invalid_products = (
-        ~fact_sales["product_id"]
-        .isin(dim_product["product_id"])
+    produtos_invalidos = (
+        ~fato_vendas["product_id"]
+        .isin(dim_produto["product_id"])
     )
 
-    if invalid_products.any():
+    if produtos_invalidos.any():
         raise ValueError(
-            "FactSales contains product_id values "
+            "FactSales contains product_id valores "
             "not present in DimProduct."
         )
 
     # ---------------------------------------------------------
-    # Validate fact -> seller
+    # Validar fato -> vendedor
     # ---------------------------------------------------------
 
-    invalid_sellers = (
-        ~fact_sales["seller_id"]
-        .isin(dim_seller["seller_id"])
+    vendedores_invalidos = (
+        ~fato_vendas["seller_id"]
+        .isin(dim_vendedor["seller_id"])
     )
 
-    if invalid_sellers.any():
+    if vendedores_invalidos.any():
         raise ValueError(
-            "FactSales contains seller_id values "
+            "FactSales contains seller_id valores "
             "not present in DimSeller."
         )
 
     # ---------------------------------------------------------
-    # Validate fact -> region
+    # Validar fato -> região
     # ---------------------------------------------------------
 
-    invalid_regions = (
-        ~fact_sales["region_id"]
-        .isin(dim_region["region_id"])
+    regioes_invalidas = (
+        ~fato_vendas["region_id"]
+        .isin(dim_regiao["region_id"])
     )
 
-    if invalid_regions.any():
+    if regioes_invalidas.any():
         raise ValueError(
-            "FactSales contains region_id values "
+            "FactSales contains region_id valores "
             "not present in DimRegion."
         )
 
     # ---------------------------------------------------------
-    # Validate fact -> date
+    # Validar fato -> data
     # ---------------------------------------------------------
 
-    invalid_dates = (
-        ~fact_sales["date_id"]
-        .isin(dim_date["date_id"])
+    datas_invalidas = (
+        ~fato_vendas["date_id"]
+        .isin(dim_data["date_id"])
     )
 
-    if invalid_dates.any():
+    if datas_invalidas.any():
         raise ValueError(
-            "FactSales contains date_id values "
+            "FactSales contains date_id valores "
             "not present in DimDate."
         )
 
 
-def export_model(
-    fact_sales: pd.DataFrame,
-    dim_customer: pd.DataFrame,
-    dim_product: pd.DataFrame,
-    dim_seller: pd.DataFrame,
-    dim_region: pd.DataFrame,
-    dim_date: pd.DataFrame,
+def exportar_modelo(
+    fato_vendas: pd.DataFrame,
+    dim_cliente: pd.DataFrame,
+    dim_produto: pd.DataFrame,
+    dim_vendedor: pd.DataFrame,
+    dim_regiao: pd.DataFrame,
+    dim_data: pd.DataFrame,
 ):
     """
-    Clears the processed directory and exports
-    the dimensional model as CSV files.
+    Limpa o diretório de dados processados e exporta
+    o modelo dimensional como arquivos CSV.
     """
 
-    OUT_DIR.mkdir(
+    DIRETORIO_SAIDA.mkdir(
         parents=True,
         exist_ok=True
     )
 
-    # Remove previously generated CSV files
-    for file in OUT_DIR.glob("*.csv"):
+    # Remover arquivos CSV gerados anteriormente
+    for file in DIRETORIO_SAIDA.glob("*.csv"):
         file.unlink()
 
-    # Export dimensions
-    dim_customer.to_csv(
-        OUT_DIR / "dim_customer.csv",
+    # Exportar dimensoes
+    dim_cliente.to_csv(
+        DIRETORIO_SAIDA / "dim_cliente.csv",
         index=False
     )
 
-    dim_product.to_csv(
-        OUT_DIR / "dim_product.csv",
+    dim_produto.to_csv(
+        DIRETORIO_SAIDA / "dim_produto.csv",
         index=False
     )
 
-    dim_seller.to_csv(
-        OUT_DIR / "dim_seller.csv",
+    dim_vendedor.to_csv(
+        DIRETORIO_SAIDA / "dim_vendedor.csv",
         index=False
     )
 
-    dim_region.to_csv(
-        OUT_DIR / "dim_region.csv",
+    dim_regiao.to_csv(
+        DIRETORIO_SAIDA / "dim_regiao.csv",
         index=False
     )
 
-    dim_date.to_csv(
-        OUT_DIR / "dim_date.csv",
+    dim_data.to_csv(
+        DIRETORIO_SAIDA / "dim_data.csv",
         index=False
     )
 
-    # Export fact
-    fact_sales.to_csv(
-        OUT_DIR / "fact_sales.csv",
+    # Exportarar tabela fato
+    fato_vendas.to_csv(
+        DIRETORIO_SAIDA / "fato_vendas.csv",
         index=False
     )
 
 
 def main():
-    print("Starting ETL...")
+    print("Iniciando ETL...")
 
     # ---------------------------------------------------------
-    # Read raw data
+    # Ler dados brutos
     # ---------------------------------------------------------
 
-    if not RAW_FILE.exists():
+    if not ARQUIVO_BRUTO.exists():
         raise FileNotFoundError(
-            f"Raw file not found: {RAW_FILE}"
+            f"Arquivo bruto não encontrado: {ARQUIVO_BRUTO}"
         )
 
-    df_raw = pd.read_csv(RAW_FILE)
+    df_bruto = pd.read_csv(ARQUIVO_BRUTO)
 
-    print(f"Raw rows: {len(df_raw):,}")
-
-    # ---------------------------------------------------------
-    # Validate raw data
-    # ---------------------------------------------------------
-
-    validate_raw(df_raw)
+    print(f"Linhas brutas: {len(df_bruto):,}")
 
     # ---------------------------------------------------------
-    # Clean and transform
+    # Validar dados brutos
     # ---------------------------------------------------------
 
-    df_clean = clean_raw(df_raw)
+    validar_dados_brutos(df_bruto)
+
+    # ---------------------------------------------------------
+    # Limpar e transformar
+    # ---------------------------------------------------------
+
+    df_limpo = limpar_dados_brutos(df_bruto)
 
     print(
-        f"Rows after cleaning: {len(df_clean):,}"
+        f"Linhas após limpeza: {len(df_limpo):,}"
     )
 
     # ---------------------------------------------------------
-    # Build dimensions
+    # Build dimensoes
     # ---------------------------------------------------------
 
-    dim_customer = build_dim_customer(df_clean)
-    dim_product = build_dim_product(df_clean)
-    dim_seller = build_dim_seller(df_clean)
-    dim_region = build_dim_region(df_clean)
-    dim_date = build_dim_date(df_clean)
+    dim_cliente = construir_dim_cliente(df_limpo)
+    dim_produto = construir_dim_produto(df_limpo)
+    dim_vendedor = construir_dim_vendedor(df_limpo)
+    dim_regiao = construir_dim_regiao(df_limpo)
+    dim_data = construir_dim_data(df_limpo)
 
     # ---------------------------------------------------------
-    # Build fact
+    # Construir tabela fato
     # ---------------------------------------------------------
 
-    fact_sales = build_fact_sales(df_clean)
+    fato_vendas = construir_fato_vendas(df_limpo)
 
     # ---------------------------------------------------------
-    # Validate dimensional model
+    # Validar modelo dimensional
     # ---------------------------------------------------------
 
-    validate_model(
-        fact_sales=fact_sales,
-        dim_customer=dim_customer,
-        dim_product=dim_product,
-        dim_seller=dim_seller,
-        dim_region=dim_region,
-        dim_date=dim_date,
+    validar_modelo(
+        fato_vendas=fato_vendas,
+        dim_cliente=dim_cliente,
+        dim_produto=dim_produto,
+        dim_vendedor=dim_vendedor,
+        dim_regiao=dim_regiao,
+        dim_data=dim_data,
     )
 
     # ---------------------------------------------------------
-    # Export
+    # Exportar
     # ---------------------------------------------------------
 
-    export_model(
-        fact_sales=fact_sales,
-        dim_customer=dim_customer,
-        dim_product=dim_product,
-        dim_seller=dim_seller,
-        dim_region=dim_region,
-        dim_date=dim_date,
+    exportar_modelo(
+        fato_vendas=fato_vendas,
+        dim_cliente=dim_cliente,
+        dim_produto=dim_produto,
+        dim_vendedor=dim_vendedor,
+        dim_regiao=dim_regiao,
+        dim_data=dim_data,
     )
 
     # ---------------------------------------------------------
-    # Summary
+    # Resumo
     # ---------------------------------------------------------
 
-    print("\nETL completed successfully.")
-    print("\nGenerated tables:")
+    print("\nETL concluído com sucesso.")
+    print("\nTabelas geradas:")
 
     print(
-        f"  DimCustomer: {len(dim_customer):,} rows"
-    )
-
-    print(
-        f"  DimProduct:  {len(dim_product):,} rows"
+        f"  dim_cliente: {len(dim_cliente):,} rows"
     )
 
     print(
-        f"  DimSeller:   {len(dim_seller):,} rows"
+        f"  dim_produto:  {len(dim_produto):,} rows"
     )
 
     print(
-        f"  DimRegion:   {len(dim_region):,} rows"
+        f"  dim_vendedor:   {len(dim_vendedor):,} rows"
     )
 
     print(
-        f"  DimDate:     {len(dim_date):,} rows"
+        f"  dim_regiao:   {len(dim_regiao):,} rows"
     )
 
     print(
-        f"  FactSales:   {len(fact_sales):,} rows"
+        f"  dim_data:     {len(dim_data):,} rows"
     )
 
     print(
-        f"\nOutput directory: {OUT_DIR}"
+        f"  fato_vendas:   {len(fato_vendas):,} rows"
+    )
+
+    print(
+        f"\nDiretório de saída: {DIRETORIO_SAIDA}"
     )
 
 

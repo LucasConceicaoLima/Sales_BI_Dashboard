@@ -64,7 +64,7 @@ sales-bi-dashboard/
 │
 ├── powerbi/
 │   ├── Sales_BI_Dashboard.pbix
-│   └── measures.dax
+│   └── medidas.dax
 │
 └── docs/
     ├── dashboard-wireframe.png
@@ -195,24 +195,24 @@ A estrutura principal é:
 
 ```text
                          ┌──────────────┐
-                         │   DimDate    │
+                         │   dim_data    │
                          └──────┬───────┘
                                 │
                                 │
 ┌──────────────┐         ┌─────▼──────┐         ┌──────────────┐
-│ DimCustomer  │────────▶│  FactSales │◀────────│  DimSeller   │
+│ dim_cliente  │────────▶│  fato_vendas │◀────────│  dim_vendedor   │
 └──────────────┘         └─────┬──────┘         └──────────────┘
                                 │
                          ┌──────┴──────┐
                          │             │
                   ┌─────▼─────┐ ┌────▼──────┐
-                  │ DimProduct│ │ DimRegion │
+                  │ dim_produto│ │ dim_regiao │
                   └───────────┘ └───────────┘
 ```
 
 As dimensões se relacionam diretamente com a tabela fato, mantendo o modelo adequado para análises no Power BI.
 
-## FactSales
+## fato_vendas
 
 **Grão:**
 
@@ -229,7 +229,7 @@ A tabela fato contém os principais valores utilizados nas análises:
 * lucro bruto
 * margem %
 
-## DimCustomer
+## dim_cliente
 
 Contém informações relacionadas aos clientes:
 
@@ -238,7 +238,7 @@ Contém informações relacionadas aos clientes:
 * cidade
 * estado
 
-## DimProduct
+## dim_produto
 
 Contém informações relacionadas aos produtos:
 
@@ -246,21 +246,21 @@ Contém informações relacionadas aos produtos:
 * categoria
 * subcategoria
 
-## DimSeller
+## dim_vendedor
 
 Contém informações relacionadas aos vendedores:
 
 * vendedor
 * equipe comercial
 
-## DimRegion
+## dim_regiao
 
 Centraliza as informações geográficas:
 
 * região
 * estado
 
-## DimDate
+## dim_data
 
 Calendário contínuo criado a partir do intervalo de datas encontrado nos dados transacionais.
 
@@ -301,19 +301,22 @@ O Power BI utiliza as tabelas geradas pelo ETL para construir o modelo semântic
 O relacionamento segue o padrão:
 
 ```text
-Dimensão 1:N FactSales
+Dimensão 1:N fato_vendas
 ```
 
 com as dimensões filtrando a tabela fato.
 
 Principais tabelas utilizadas:
 
-* `FactSales`
-* `DimDate`
-* `DimCustomer`
-* `DimProduct`
-* `DimSeller`
-* `DimRegion`
+* `fato_vendas`
+* `dim_data`
+* `dim_cliente`
+* `dim_produto`
+* `dim_vendedor`
+* `dim_regiao`
+* `Medidas` — tabela dedicada à organização das medidas DAX do modelo
+
+A tabela `Medidas` não representa uma dimensão ou tabela fato. Ela é utilizada exclusivamente para centralizar e organizar os indicadores calculados no modelo semântico.
 
 As principais medidas DAX utilizadas no relatório estão documentadas em:
 
@@ -339,10 +342,12 @@ Página executiva com uma visão geral do desempenho das vendas.
 
 Principais indicadores apresentados:
 
-* **Rceita**
+* **Receita**
 * **Lucro Bruto**
 * **Margem %**
 * **Transações**
+
+Os cards dos principais KPIs também apresentam a **variação percentual em relação ao ano anterior (YoY)**, facilitando a comparação do desempenho atual com o mesmo período do ano anterior.
 
 A página também apresenta análises relacionadas à evolução das vendas e à distribuição dos resultados por diferentes dimensões do negócio.
 
@@ -404,7 +409,7 @@ Os principais indicadores atualmente apresentados no dashboard são:
 | **Margem %**    | Margem percentual sobre a receita |
 | **Transações**  | Quantidade de transações válidas  |
 
-Esses indicadores formam a camada principal de acompanhamento do dashboard atual.
+Esses indicadores formam a camada principal de acompanhamento do dashboard atual e são complementados por medidas de **Year over Year (YoY)** para comparação com o mesmo período do ano anterior.
 
 ---
 
@@ -412,12 +417,12 @@ Esses indicadores formam a camada principal de acompanhamento do dashboard atual
 
 O projeto pode ser expandido futuramente com:
 
-* Revisão das medidas DAX para verificar quais estão efetivamente utilizadas no dashboard e remover medidas desnecessárias.
-* Inclusão de novos KPIs, como **Units Sold**, **Average Ticket** e **Active Customers**.
-* Adição de análises de crescimento e comparação entre períodos.
+* Inclusão de novos KPIs, como **Unidades Vendidas**, **Ticket Médio** e **Clientes Ativos**.
+* Expansão das análises temporais com comparações adicionais, como **Month over Month (MoM)** e acumulados.
 * Aprimoramento das interações do dashboard, incluindo **tooltips**, **drill-through** e filtros adicionais.
 * Expansão das análises de clientes, produtos e devoluções.
 * Adição de validações automatizadas para verificar a consistência dos dados após o ETL.
+
 
 ---
 

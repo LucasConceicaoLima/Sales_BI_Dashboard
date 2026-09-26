@@ -1,0 +1,154 @@
+// Medidas DAX — Sales BI Dashboard (PT-BR)
+
+// =========================
+// KPIs principais
+// =========================
+
+Receita =
+SUM ( fato_vendas[receita_liquida] )
+
+Receita Bruta =
+SUM ( fato_vendas[receita_bruta] )
+
+Lucro Bruto =
+SUM ( fato_vendas[lucro_bruto] )
+
+Custo Total =
+SUM ( fato_vendas[custo_total] )
+
+Unidades Vendidas =
+SUM ( fato_vendas[quantidade_liquida] )
+
+Transações =
+DISTINCTCOUNT ( fato_vendas[venda_id] )
+
+Clientes Ativos =
+DISTINCTCOUNT ( fato_vendas[cliente_id] )
+
+Ticket Médio =
+DIVIDE ( [Receita], [Transações] )
+
+Margem % =
+DIVIDE ( [Lucro Bruto], [Receita] )
+
+Desconto Médio % =
+AVERAGE ( fato_vendas[desconto_pct] )
+
+Receita por Cliente =
+DIVIDE ( [Receita], [Clientes Ativos] )
+
+// =========================
+// Inteligência de tempo
+// =========================
+
+Receita YTD =
+TOTALYTD ( [Receita], dim_data[data] )
+
+Receita Ano Anterior =
+CALCULATE (
+    [Receita],
+    SAMEPERIODLASTYEAR ( dim_data[data] )
+)
+
+Receita YoY % =
+DIVIDE (
+    [Receita] - [Receita Ano Anterior],
+    [Receita Ano Anterior]
+)
+
+Receita Mês Anterior =
+CALCULATE (
+    [Receita],
+    DATEADD ( dim_data[data], -1, MONTH )
+)
+
+Receita MoM % =
+DIVIDE (
+    [Receita] - [Receita Mês Anterior],
+    [Receita Mês Anterior]
+)
+
+// =========================
+// YoY dos KPIs do dashboard
+// =========================
+
+Lucro Bruto Ano Anterior =
+CALCULATE (
+    [Lucro Bruto],
+    SAMEPERIODLASTYEAR ( dim_data[data] )
+)
+
+Lucro Bruto YoY % =
+DIVIDE (
+    [Lucro Bruto] - [Lucro Bruto Ano Anterior],
+    [Lucro Bruto Ano Anterior]
+)
+
+Margem Ano Anterior =
+CALCULATE (
+    [Margem %],
+    SAMEPERIODLASTYEAR ( dim_data[data] )
+)
+
+Margem YoY =
+[Margem %] - [Margem Ano Anterior]
+
+Transações Ano Anterior =
+CALCULATE (
+    [Transações],
+    SAMEPERIODLASTYEAR ( dim_data[data] )
+)
+
+Transações YoY % =
+DIVIDE (
+    [Transações] - [Transações Ano Anterior],
+    [Transações Ano Anterior]
+)
+
+// =========================
+// Exibição dos cards
+// =========================
+
+receita_yoy_display =
+VAR Variacao = [Receita YoY %]
+RETURN
+    IF (
+        ISBLANK ( Variacao ),
+        BLANK (),
+        IF ( Variacao >= 0, "▲ ", "▼ " )
+            & FORMAT ( ABS ( Variacao ), "0,00%" )
+            & " vs. ano anterior"
+    )
+
+lucro_bruto_yoy_display =
+VAR Variacao = [Lucro Bruto YoY %]
+RETURN
+    IF (
+        ISBLANK ( Variacao ),
+        BLANK (),
+        IF ( Variacao >= 0, "▲ ", "▼ " )
+            & FORMAT ( ABS ( Variacao ), "0,00%" )
+            & " vs. ano anterior"
+    )
+
+margem_yoy_display =
+VAR Variacao = [Margem YoY]
+RETURN
+    IF (
+        ISBLANK ( Variacao ),
+        BLANK (),
+        IF ( Variacao >= 0, "▲ ", "▼ " )
+            & FORMAT ( ABS ( Variacao ), "0,00 p.p." )
+            & " vs. ano anterior"
+    )
+
+transacoes_yoy_display =
+VAR Variacao = [Transações YoY %]
+RETURN
+    IF (
+        ISBLANK ( Variacao ),
+        BLANK (),
+        IF ( Variacao >= 0, "▲ ", "▼ " )
+            & FORMAT ( ABS ( Variacao ), "0,00%" )
+            & " vs. ano anterior"
+    )
